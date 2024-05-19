@@ -7,10 +7,6 @@
 
 import SwiftUI
 
-// SettingsView.swift
-
-import SwiftUI
-
 struct SettingsView: View {
     @State private var urlString: String = ""
     @EnvironmentObject var networkManager: NetworkManager

@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ContentView: View {
-    
     @StateObject private var networkManager = NetworkManager()
     @State private var showSettings = false
     
@@ -48,10 +47,12 @@ struct ContentView: View {
                 networkManager.loadQuizzesFromUserDefaults()
                 networkManager.fetchQuizzes()
             }
+            .alert(isPresented: $networkManager.showError) {
+                Alert(title: Text("Error"), message: Text("Unable to fetch data"), dismissButton: .default(Text("OK")))
+            }
         }
     }
 }
-
 
 #Preview {
     ContentView()

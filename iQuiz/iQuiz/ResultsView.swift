@@ -8,26 +8,28 @@
 import SwiftUI
 
 struct ResultsView: View {
-    let score: Int
-    let total: Int
-
+    let correctAnswers: Int
+    let totalQuestions: Int
+    
+    @Environment(\.presentationMode) var presentationMode
+    
     var body: some View {
         VStack {
             Text("Quiz Finished!")
                 .font(.largeTitle)
                 .padding()
-            Text("You scored \(score) out of \(total)")
-                .font(.headline)
-            Button(action: {
-                // Navigate back to the home screen
-            }) {
-                Text("Home")
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
+            
+            Text("You got \(correctAnswers) out of \(totalQuestions) correct.")
+                .font(.title2)
+                .padding()
+            
+            Spacer()
+            
+            Button("Home") {
+                presentationMode.wrappedValue.dismiss()
             }
-            .padding(.top)
+            .padding()
         }
+        .padding()
     }
 }

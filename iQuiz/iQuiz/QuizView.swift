@@ -10,90 +10,94 @@ import SwiftUI
 struct QuizView: View {
     let quiz: Quiz
     @State private var currentQuestionIndex = 0
-    @State private var selectedAnswerIndex: Int? = nil
-    @State private var isAnswerSubmitted = false
-    @State private var score = 0
-    @State private var showResults = false
+    @State private var selectedAnswer: Int? = nil
+    @State private var showResult = false
+    @State private var isCorrect = false
+    @State private var correctAnswerText = ""
+    @State private var correctAnswersCount = 0
+    @State private var showResultsView = false
+    
+    @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
-        VStack {
-            if currentQuestionIndex < quiz.questions.count {
-                let question = quiz.questions[currentQuestionIndex]
-                Text(question.text)
+        if showResultsView {
+            ResultsView(correctAnswers: correctAnswersCount, totalQuestions: quiz.questions.count)
+        } else {
+            let currentQuestion = quiz.questions[currentQuestionIndex]
+            VStack {
+                Text(currentQuestion.text)
                     .font(.title)
                     .padding()
-
-                ForEach(0..<question.answers.count, id: \.self) { index in
+                
+                ForEach(0..<currentQuestion.answers.count, id: \.self) { index in
                     Button(action: {
-                        selectedAnswerIndex = index
+                        selectedAnswer = index
                     }) {
-                        Text(question.answers[index])
-                            .padding()
-                            .background(selectedAnswerIndex == index ? Color.blue : Color.gray)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
+                        HStack {
+                            Text(currentQuestion.answers[index])
+                                .foregroundColor(selectedAnswer == index ? .white : .blue)
+                            Spacer()
+                        }
+                        .padding()
+                        .background(selectedAnswer == index ? Color.blue : Color.clear)
+                        .cornerRadius(8)
                     }
-                    .padding(.bottom, 5)
+                    .disabled(showResult)
                 }
-
-                if isAnswerSubmitted {
-                    Text(selectedAnswerIndex == quiz.questions[currentQuestionIndex].answers.firstIndex(of: quiz.questions[currentQuestionIndex].answer) ? "Correct!" : "Wrong!")
-                        .font(.headline)
-                        .foregroundColor(selectedAnswerIndex == quiz.questions[currentQuestionIndex].answers.firstIndex(of: quiz.questions[currentQuestionIndex].answer) ? .green : .red)
+                
+                if showResult {
+                    Text(isCorrect ? "Correct!" : "Incorrect. Correct answer: \(correctAnswerText)")
+                        .padding()
+                        .foregroundColor(isCorrect ? .green : .red)
                 }
-
+                
+                Spacer()
+                
                 HStack {
-                    Button(action: {
-                        // Navigate back to the home screen
-                    }) {
-                        Text("Home")
-                            .padding()
-                            .background(Color.red)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
+                    Button("Home") {
+                        presentationMode.wrappedValue.dismiss()
                     }
+                    .padding()
                     
-                    Button(action: {
-                        if let selectedAnswerIndex = selectedAnswerIndex {
-                            if selectedAnswerIndex == quiz.questions[currentQuestionIndex].answers.firstIndex(of: quiz.questions[currentQuestionIndex].answer) {
-                                score += 1
-                            }
-                            isAnswerSubmitted = true
+                    Spacer()
+                    
+                    Button(showResult ? "Next" : "OK") {
+                        if showResult {
+                            goToNextQuestion()
+                        } else {
+                            checkAnswer()
                         }
-                    }) {
-                        Text("Submit")
-                            .padding()
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                            .disabled(selectedAnswerIndex == nil)
                     }
-                    .padding(.top)
-
-                    if isAnswerSubmitted {
-                        Button(action: {
-                            currentQuestionIndex += 1
-                            selectedAnswerIndex = nil
-                            isAnswerSubmitted = false
-                            if currentQuestionIndex == quiz.questions.count {
-                                showResults = true
-                            }
-                        }) {
-                            Text("Next")
-                                .padding()
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                        }
-                        .padding(.top)
-                    }
-                }
-            } else {
-                NavigationLink(destination: ResultsView(score: score, total: quiz.questions.count), isActive: $showResults) {
-                    EmptyView()
+                    .padding()
+                    .disabled(selectedAnswer == nil)
                 }
             }
+            .padding()
         }
-        .padding()
+    }
+    
+    private func checkAnswer() {
+        guard let selectedAnswer = selectedAnswer else { return }
+        let currentQuestion = quiz.questions[currentQuestionIndex]
+        if let correctAnswerIndex = Int(currentQuestion.answer) {
+            isCorrect = (selectedAnswer + 1) == correctAnswerIndex
+            correctAnswerText = currentQuestion.answers[correctAnswerIndex - 1]
+            if isCorrect {
+                correctAnswersCount += 1
+            }
+            showResult = true
+        }
+    }
+    
+    private func goToNextQuestion() {
+        showResult = false
+        selectedAnswer = nil
+        
+        if currentQuestionIndex < quiz.questions.count - 1 {
+            currentQuestionIndex += 1
+        } else {
+            // Navigate to results view
+            showResultsView = true
+        }
     }
 }
